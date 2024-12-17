@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Balls</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="homeScreen">
+        <h1>Welcome to Bouncing Balls</h1>
+        <p>Click the button below to start the corresponding animation.</p>
+        <button id="startButton">Start</button>
+    </div>
+
+    <!-- Canvas for Animation -->
+    <div id="gameBox">
+        <canvas id="gameCanvas"></canvas>
+        <button id="backButton" class="gameButton">Back</button>
+        <button id="addBall" class="gameButton">Add Ball</button>
+        <button id="reset" class="gameButton">Reset</button>
+        <button id="gravUp" class="gameButton">+</button>
+        <p id="grav">Gravity: 0.5</p>
+        <button id="gravDown" class="gameButton">-</button>
+        <button id="bounceUp" class="gameButton">+</button>
+        <p id="bounce">Bounce gain: 0.01</p>
+        <button id="bounceDown" class="gameButton">-</button>
+        <button id="sizeUp" class="gameButton">+</button>
+        <p id="size">Size gain: 0.5</p>
+        <button id="sizeDown" class="gameButton">-</button>
+        <form id="soundForm">
+            <label for="audioUpload">Upload an audio file (MP3, WAV, OGG):</label>
+            <input id="soundInput" type="file" id="audioUpload" name="audioUpload" accept=".mp3, .wav, .ogg">
+            <button type="button" id="soundButton" class="gameButton">Submit</button>
+        </form>
+        <form id="imageForm">
+            <label for="imageUpload">Upload an image file (JPG, PNG, GIF):</label>
+            <input type="file" id="imageInput" name="imageUpload" accept=".jpg, .png, .gif">
+            <button type="button" id="imageButton" class="gameButton">Submit</button>
+        </form>
+    </div>
+    
+
+    <script src="ballGrow.js"></script>
+</body>
+</html>
