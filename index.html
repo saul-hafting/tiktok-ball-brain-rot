@@ -10,10 +10,19 @@
     <div id="homeScreen">
         <h1>Welcome to Bouncing Balls</h1>
         <p>Click the button below to start the corresponding animation.</p>
-        <button id="startButton">Start</button>
+        <div id="nav">
+            <div id="buttonNav">
+                <button id="ballGrowButton" class="navButton">Start</button>
+                <button id="ballEscapeButton" class="navButton">Start</button>                
+            </div>
+            <div id="imgNav">
+                <img src="IMG/ballBounce.png" alt="">
+                <img src="IMG/temp.png" alt="">
+            </div>
+        </div>
     </div>
 
-    <!-- Canvas for Animation -->
+    <!-- Canvas for Ball Grow Animation -->
     <div id="gameBox">
         <canvas id="gameCanvas"></canvas>
         <button id="backButton" class="gameButton">Back</button>
@@ -35,12 +44,20 @@
         </form>
         <form id="imageForm">
             <label for="imageUpload">Upload an image file (JPG, PNG, GIF):</label>
-            <input type="file" id="imageInput" name="imageUpload" accept=".jpg, .png, .gif">
+            <input multiple type="file" id="imageInput" name="imageUpload" accept=".jpg, .png, .gif">
             <button type="button" id="imageButton" class="gameButton">Submit</button>
+            <p>*The second run with images wont lag*</p>
         </form>
+        <button id="tail" class="gameButton">Add tail</button>
+    </div>
+
+    <div id="gameBoxBallEscape">
+        <canvas id="gameCanvasBallEscape"></canvas>
+        <button id="backButtonBallEscape" class="gameButton">Back</button>
     </div>
     
 
     <script src="ballGrow.js"></script>
-</body>
+    <script src="ballEscape.js"></script>
+</body>     
 </html>

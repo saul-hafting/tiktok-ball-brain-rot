@@ -23,7 +23,7 @@ body {
     margin-top: 20px;
 }
 
-#startButton, .gameButton, #bounce, #grav, #size, #soundForm > *, #imageForm > * {
+.navButton, .gameButton, #bounce, #grav, #size, #soundForm > *, #imageForm > * {
     padding: 12px 24px;
     font-size: 16px;
     font-weight: bold;
@@ -35,22 +35,29 @@ body {
     transition: background-color 0.3s, transform 0.2s;
 }
 
-#startButton:hover, .gameButton:hover {
+#navButton:hover, .gameButton:hover {
     background-color: #555;
     transform: translateY(-2px);
 }
 
-#startButton {
+.navButton {
     background-color: #007bff;
 }
 
-#startButton:hover {
+.navButton:hover {
     background-color: #0056b3;
 }
 
 #imageForm {
     position: relative;
     bottom: 100px;
+}
+
+#tail {
+    position: absolute;
+    bottom: 380px;
+    right: 20px;
+    box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
 }
 
 #size {
@@ -139,4 +146,33 @@ body {
 
 #soundButton, #imageButton {
     transition: background-color 0.3s, color 0.3s;
+}
+
+#imageForm > p {
+    padding: 0px 0px;
+    display: inline;
+    font-size: 16px;
+    font-weight: normal;
+    color: white;
+    background-color: #333;
+    border: none;
+    border-radius: 0px;
+    cursor: pointer;
+}
+
+#buttonNav > * {
+    margin-left: 100px;
+    margin-right: 100px;
+}
+
+#gameBoxBallEscape {
+    display: none; /* Hide canvas initially */
+    margin-top: 20px;
+}
+
+#backButtonBallEscape {
+    position: absolute;
+    bottom: 80px;
+    right: 20px;
+    box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
 }

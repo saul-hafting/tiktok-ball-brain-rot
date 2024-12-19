@@ -17,39 +17,50 @@ let sizeDisplay = document.getElementById('size')
 let ballGravity = 0.4
 let bounce = 2.01
 let sizeGain = 0.5
+let numBalls = 0
+
+let hasTail = false;
 
 let hasInputSound = false;
 let hasInputImage = false;
 let inputFile;
-let inputImage;
+let inputImage = [];
 
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-const audioSources = [];
+let audio = null
 
-function playCollisionSound(soundFile) {
-    // Fetch the audio file
-    fetch(soundFile)
-        .then(response => response.arrayBuffer())
-        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
-        .then(audioBuffer => {
-            // Create a new audio source for each collision
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioContext.destination);
-            source.start(0);
+let isSoundPlaying = false;
 
-            // Optional: Track and manage audio sources
-            audioSources.push(source);
+let soundTimer = null; // Timer for collision sound
+const soundCooldown = 200; // Cooldown period in milliseconds
 
-            // Remove the source after it finishes playing
-            source.onended = () => {
-                const index = audioSources.indexOf(source);
-                if (index > -1) {
-                    audioSources.splice(index, 1);
-                }
-            };
-        })
-        .catch(error => console.error('Error playing sound:', error));
+function playCollisionSoundWithGlobalReset() {
+    if (audio && hasInputSound) {
+        if (!isSoundPlaying) {
+            isSoundPlaying = true; // Set the flag to prevent overlaps
+            audio.currentTime = 0; // Reset to start
+            audio.play().catch((error) => console.error('Error playing sound:', error));
+
+            // Reset the sound after the full cooldown period
+            soundTimer = setTimeout(() => {
+                isSoundPlaying = false; // Allow the next sound to play
+                audio.pause();
+            }, soundCooldown);
+        } else {
+            // Reset the timer if another collision happens
+            if (soundTimer) {
+                clearTimeout(soundTimer);
+            }
+            soundTimer = setTimeout(() => {
+                isSoundPlaying = false;
+            }, soundCooldown);
+        }
+    }
+}
+
+function stopSound() {
+    if(audio != null) {
+        audio.pause()
+    }
 }
 
 
@@ -161,8 +172,8 @@ class Ball {
     
                 // Check if the balls are overlapping
                 if (distance < ball.radius + other.radius) {
-                    if(hasInputSound) {
-                        playCollisionSound(inputFile);
+                    if (hasInputSound) {
+                        playCollisionSoundWithGlobalReset();
                     }
                     // Calculate the normal vector
                     const nx = dx / distance;
@@ -218,10 +229,11 @@ function addBall() {
 
     const ball = new Ball(x, y, 5);
 
-    if(hasInputImage) {
-        ball.loadImage(inputImage).catch(error => console.error('Failed to load ball image:', error));
+    if(hasInputImage && inputImage.length > 0) {
+        const imageIndex = numBalls % inputImage.length;
+        ball.loadImage(inputImage[imageIndex]).catch(error => console.error('Failed to load ball image:', error));
     }
-
+    numBalls++;
     balls.push(ball);
 }
 
@@ -229,7 +241,9 @@ function addBall() {
 function animate() {
     if (!isAnimating) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if(!hasTail) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
     drawBoundary();
     balls.forEach((ball) => {
         ball.move();
@@ -247,6 +261,7 @@ function reset() {
     ballGravity = 0.4
     bounce = 2.01
     sizeGain = 0.5
+    stopSound();
     gravDisplay.innerText = "Gravity: " + ballGravity.toFixed(1);
     bounceDisplay.innerText = "Bounce gain: " + (bounce-2).toFixed(2); 
     sizeDisplay.innerText = "Size gain: " + sizeGain.toFixed(1); 
@@ -255,6 +270,21 @@ function reset() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+function preloadImages(imageUrls) {
+    return Promise.all(
+        imageUrls.map(
+            (url) =>
+                new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = url;
+                })
+        )
+    );
+}
+
+
 
 // Event listener for adding a ball on click
 document.getElementById('addBall').addEventListener('click', () => {
@@ -262,7 +292,7 @@ document.getElementById('addBall').addEventListener('click', () => {
 });
 
 // Start animation
-document.getElementById('startButton').addEventListener('click', function() {
+document.getElementById('ballGrowButton').addEventListener('click', function() {
     gravDisplay.innerText = "Gravity: " + ballGravity.toFixed(1); 
     bounceDisplay.innerText = "Bounce gain: " + (bounce-2).toFixed(2); 
     sizeDisplay.innerText = "Size gain: " + sizeGain.toFixed(1);  
@@ -277,6 +307,7 @@ document.getElementById('startButton').addEventListener('click', function() {
 });
 
 document.getElementById('backButton').addEventListener('click', function() {
+    stopSound();
     isAnimating = false
     const homeScreen = document.getElementById("homeScreen");
     const gameBox = document.getElementById("gameBox");
@@ -336,8 +367,17 @@ document.getElementById('soundButton').addEventListener('click', () => {
     const button = document.getElementById('soundButton');
 
     if (file) {
+        const fileURL = URL.createObjectURL(file);
+
+        // Stop and reset the current audio if already playing
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0; // Reset playback to the start
+        }
+
+        // Create a new Audio instance and set its source
+        audio = new Audio(fileURL);
         hasInputSound = true;
-        inputFile = URL.createObjectURL(file);
 
         // Provide visual feedback
         button.style.backgroundColor = "green";
@@ -367,25 +407,35 @@ document.getElementById('soundButton').addEventListener('click', () => {
 });
 
 
+
 document.getElementById('imageButton').addEventListener('click', () => {
     const imageInput = document.getElementById('imageInput');
-    const file = imageInput.files[0];
+    const files = imageInput.files; 
     const button = document.getElementById('imageButton');
 
-    if (file) {
+    if (files.length > 0) {
         hasInputImage = true;
-        inputImage = URL.createObjectURL(file);
+
+        // Clear the existing images
+        inputImage = [];
+
+        // Store image URLs for all uploaded files
+        for (let i = 0; i < files.length; i++) {
+            inputImage.push(URL.createObjectURL(files[i]));
+        }
 
         // Success feedback
         button.style.backgroundColor = "green";
-        button.innerText = "Image Uploaded!";
+        button.innerText = "Images Uploaded!";
 
         setTimeout(() => {
             button.style.backgroundColor = "#333";
             button.innerText = "Submit";
         }, 1500);
 
-        console.log(`Image file loaded: ${file.name}`);
+        preloadImages(inputImage)
+
+        console.log(`Loaded ${files.length} image(s).`);
     } else {
         hasInputImage = false;
 
@@ -398,6 +448,19 @@ document.getElementById('imageButton').addEventListener('click', () => {
             button.innerText = "Submit";
         }, 1500);
 
-        console.log('No image file selected.');
+        console.log('No images selected.');
     }
 });
+
+document.getElementById('tail').addEventListener('click', () => {
+    if(!hasTail) {
+        hasTail = true
+        document.getElementById('tail').innerText = "Remove Tail"
+    }
+    else {
+        hasTail = false
+        document.getElementById('tail').innerText = "Add Tail"
+    }
+});
+
+
